@@ -1,0 +1,39 @@
+FROM tiangolo/nginx-rtmp:latest
+
+# Install useful tools
+RUN apt-get -qy update && \
+	DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+	bash \
+	bash-completion \
+	curl \
+	iperf \
+	iperf3 \
+	iproute2 \
+	iputils-ping \
+	net-tools
+
+# Install the packages required for streaming videos and dumping traffic (plus a text editor, useful for debugging)
+RUN apt-get -qy update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    ffmpeg \
+    tcpdump \
+    nano
+
+# Override the default nginx configuration file
+COPY config/nginx.conf /etc/nginx/nginx.conf
+
+# Copy the script that allows streaming videos
+COPY stream_video.sh /home/
+
+# Copy the tcpdump utils scripts
+COPY tcpdump_utils /home/tcpdump_utils
+
+# Make the scripts executable
+RUN chmod +x /home/stream_video.sh /home/tcpdump_utils/*.sh
+
+# Copy the sample videos inside the container
+COPY videos /home/videos
+
+# Default configuration for docker run taken from tiangolo/nginx-rtmp
+EXPOSE 1935
+CMD ["nginx", "-g", "daemon off;"]

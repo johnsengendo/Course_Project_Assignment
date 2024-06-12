@@ -1,0 +1,32 @@
+FROM ubuntu:20.04
+
+# Install useful tools
+RUN apt-get -qy update && \
+	DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+	bash \
+	bash-completion \
+	curl \
+	iperf \
+	iperf3 \
+	iproute2 \
+	iputils-ping \
+	net-tools
+
+# Install the packages required for accessing the video streaming and dumping the traffic (plus a text editor)
+RUN apt-get -qy update && \
+	DEBIAN_FRONTEND=noninteractive apt-get install -y \
+	ffmpeg \
+	tcpdump \
+	nano
+
+# Copy the tcpdump utils scripts
+COPY tcpdump_utils /home/tcpdump_utils
+
+# Copy the script for accessing the streaming and saving the video
+COPY get_video_stream.sh /home/
+
+# Make the scripts executable
+RUN chmod +x /home/get_video_stream.sh /home/tcpdump_utils/*.sh
+
+# Default command for docker run
+CMD ["bash"]
