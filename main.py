@@ -116,7 +116,7 @@ if __name__ == '__main__':
 
     # add the video streaming (server and client) services
     streaming_server = mgr.addContainer(
-        'streaming_server', 'server', 'video_streaming_server', 'python /home/stream_video.py', docker_args={
+        'streaming_server', 'server', 'video_streaming_serve', 'python /home/stream_video.py', docker_args={
             'volumes': {
                 shared_dir: {'bind': '/home/shared/', 'mode': 'rw'}
             }
