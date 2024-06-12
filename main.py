@@ -5,7 +5,7 @@ import argparse
 import os
 import subprocess
 import sys
-import times
+#import times
 
 from comnetsemu.cli import CLI, spawnXtermDocker
 from comnetsemu.net import Containernet, VNFManager
