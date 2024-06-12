@@ -20,11 +20,11 @@ def stop_tcpdump(tcpdump_process):
     tcpdump_process.wait()
     time.sleep(3)
 
-def stream_video(video, loops_number):
+def stream_video(video):
     ffmpeg_command = [
-        "ffmpeg", "-re", "-stream_loop", str(loops_number),
+        "ffmpeg", "-re",
         "-i", video, "-c:v", "copy", "-c:a", "aac",
-        "-ar", "44100", "-ac", "1", "-f", "flv", "rtmp://localhost:1935/live/video.flv"
+        "-ar", "44100", "-ac", "1", "-t", "8", "-f", "flv", "rtmp://localhost:1935/live/video.flv"
     ]
     subprocess.run(ffmpeg_command)
 
@@ -32,14 +32,11 @@ def main():
     parser = argparse.ArgumentParser(description='Stream video over RTMP')
     parser.add_argument('-i', '--input', type=str, default='Video/big_buck_bunny_720p_5mb.mp4',
                         help="input video filepath, with default value 'Video/big_buck_bunny_720p_5mb.mp4'")
-    parser.add_argument('-o', '--once', action='store_true',
-                        help="stream the video once, without looping on it (default is infinite loop)")
     parser.add_argument('-d', '--disable', action='store_true',
                         help="disable the capture of the video stream outgoing packets through tcpdump")
 
     args = parser.parse_args()
     video = args.input
-    loops_number = 0 if args.once else -1
     capture_traffic = not args.disable
 
     tcpdump_process = None
@@ -47,7 +44,7 @@ def main():
         tcpdump_process = start_tcpdump()
         time.sleep(2)
 
-    stream_video(video, loops_number)
+    stream_video(video)
 
     if capture_traffic and tcpdump_process:
         stop_tcpdump(tcpdump_process)
