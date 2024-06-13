@@ -5,8 +5,10 @@ import argparse
 import os
 import subprocess
 import sys
-#import times
+import shlex
+import times
 
+from subprocess import check_output
 from comnetsemu.cli import CLI, spawnXtermDocker
 from comnetsemu.net import Containernet, VNFManager
 from mininet.link import TCLink
@@ -55,6 +57,16 @@ def close_open_processes(processes):
 
     return []
 
+def get_ofport(ifce: str):
+    """Get the openflow port based on the iterface name.
+
+    :param ifce (str): Name of the interface.
+    """
+    return (
+        check_output(shlex.split("ovs-vsctl get Interface {} ofport".format(ifce)))
+        .decode("utf-8")
+        .strip()
+    )
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Script for running the video streaming app.')
@@ -112,7 +124,56 @@ if __name__ == '__main__':
     # start the network
     info('\n*** Starting network\n')
     net.start()
-    print()
+
+    # Getting the port number for the connection between hosts and switches
+    s1_h1_port_num = get_ofport("s1-h1")
+    s1_s2_port_num = get_ofport("s1-s2")
+    s2_s1_port_num = get_ofport("s2-s1")
+    s2_h2_port_num = get_ofport("s2-h2")
+
+
+    # For realistic setup, switches should be managed by a remote controller.
+    info("*** Add flow to forward traffic from h1 to h2 to switches s1 and s2.\n")
+
+    # Add flow to switch s1 to forward traffic from h1 to s2
+    check_output(
+        shlex.split(
+            'ovs-ofctl add-flow s1 "in_port={}, actions=output:{}"'.format(
+                s1_h1_port_num, s1_s2_port_num 
+            )
+        )
+    )
+
+    # Add flow to switch s1 to forward traffic from s2 to h1
+    check_output(
+        shlex.split(
+            'ovs-ofctl add-flow s1 "in_port={}, actions=output:{}"'.format(
+                s1_s2_port_num, s1_h1_port_num
+            )
+        )
+    )
+
+    # Add flow to switch s2 to forward traffic from s1 to h2
+    check_output(
+        shlex.split(
+            'ovs-ofctl add-flow s2 "in_port={}, actions=output:{}"'.format(
+                s2_s1_port_num, s2_h2_port_num
+            )
+        )
+    )
+
+    # Add flow to switch s2 to forward traffic from h2 to s1
+    check_output(
+        shlex.split(
+            'ovs-ofctl add-flow s2 "in_port={}, actions=output:{}"'.format(
+                s2_h2_port_num, s2_s1_port_num
+            )
+        )
+    )
+
+    info("*** server ping 10.0.0.1 with 5 packets: \n")
+    ret = server.cmd("ping -c 5 10.0.0.2")
+    print(ret)
 
     # add the video streaming (server and client) services
     streaming_server = mgr.addContainer(
