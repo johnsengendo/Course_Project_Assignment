@@ -6,7 +6,7 @@ import os
 import subprocess
 import sys
 import shlex
-import times
+import time
 
 from subprocess import check_output
 from comnetsemu.cli import CLI, spawnXtermDocker
