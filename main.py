@@ -124,7 +124,7 @@ if __name__ == '__main__':
     # start the network
     info('\n*** Starting network\n')
     net.start()
-
+    """
     # Getting the port number for the connection between hosts and switches
     s1_h1_port_num = get_ofport("s1-server")
     s1_s2_port_num = get_ofport("s1-s2")
@@ -170,7 +170,7 @@ if __name__ == '__main__':
             )
         )
     )
-
+   """
     info("*** server ping 10.0.0.1 with 5 packets: \n")
     ret = server.cmd("ping -c 5 10.0.0.2")
     print(ret)
